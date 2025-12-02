@@ -214,10 +214,19 @@ const handleUserAction = (key: string) => {
 
 <style scoped lang="less">
 .sales-sider {
-  background: linear-gradient(180deg, #1a1f2e 0%, #0d1117 100%);
+  background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
 
   :deep(.n-layout-sider-scroll-container) {
     background: transparent;
+  }
+
+  :deep(.n-layout-toggle-button) {
+    background: #4a5568;
+    color: #fff;
+
+    &:hover {
+      background: #f59e0b;
+    }
   }
 }
 
@@ -226,7 +235,7 @@ const handleUserAction = (key: string) => {
   align-items: center;
   padding: 20px 24px;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   transition: all 0.3s ease;
 
   &.collapsed {
@@ -264,15 +273,16 @@ const handleUserAction = (key: string) => {
     border-radius: 8px;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.1);
     }
   }
 
   :deep(.n-menu-item-content) {
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
 
     &:hover {
-      color: #fff;
+      color: #fff !important;
     }
 
     &::before {
@@ -281,8 +291,9 @@ const handleUserAction = (key: string) => {
   }
 
   :deep(.n-menu-item-content--selected) {
-    color: #fff;
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, transparent 100%);
+    color: #fff !important;
+    font-weight: 600;
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.3) 0%, transparent 100%);
 
     &::before {
       background: transparent;
@@ -291,10 +302,42 @@ const handleUserAction = (key: string) => {
     }
   }
 
+  :deep(.n-submenu) {
+    .n-menu-item-content {
+      color: rgba(255, 255, 255, 0.85) !important;
+    }
+  }
+
   :deep(.n-submenu-children) {
     .n-menu-item {
       padding-left: 24px;
     }
+
+    .n-menu-item-content {
+      color: rgba(255, 255, 255, 0.8) !important;
+      font-weight: 400;
+
+      &:hover {
+        color: #fff !important;
+      }
+    }
+
+    .n-menu-item-content--selected {
+      color: #f59e0b !important;
+      font-weight: 500;
+    }
+  }
+
+  :deep(.n-menu-item-content__icon) {
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+
+  :deep(.n-menu-item-content--selected .n-menu-item-content__icon) {
+    color: #f59e0b !important;
+  }
+
+  :deep(.n-menu-item-content__arrow) {
+    color: rgba(255, 255, 255, 0.7) !important;
   }
 }
 
