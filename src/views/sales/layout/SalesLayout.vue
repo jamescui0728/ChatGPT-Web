@@ -130,7 +130,7 @@ const handleUserAction = (key: string) => {
           </svg>
         </div>
         <transition name="fade">
-          <span v-if="!collapsed" class="logo-text">明源售楼系统</span>
+          <span v-if="!collapsed" class="logo-text">时代中国售楼系统</span>
         </transition>
       </div>
 

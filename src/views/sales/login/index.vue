@@ -56,7 +56,7 @@ const handleLogin = async () => {
               />
             </svg>
           </div>
-          <h1>明源售楼系统</h1>
+          <h1>时代中国售楼系统</h1>
           <p>专业的房地产销售管理平台</p>
         </div>
 
