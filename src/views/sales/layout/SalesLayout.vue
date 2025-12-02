@@ -214,19 +214,36 @@ const handleUserAction = (key: string) => {
 
 <style scoped lang="less">
 .sales-sider {
-  background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+  background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
 
   :deep(.n-layout-sider-scroll-container) {
     background: transparent;
   }
 
   :deep(.n-layout-toggle-button) {
-    background: #4a5568;
+    background: #4b5563;
     color: #fff;
 
     &:hover {
       background: #f59e0b;
     }
+  }
+
+  // 强制覆盖所有菜单文字颜色
+  :deep(.n-menu) {
+    --n-item-text-color: #ffffff !important;
+    --n-item-text-color-hover: #ffffff !important;
+    --n-item-text-color-active: #f59e0b !important;
+    --n-item-text-color-child-active: #f59e0b !important;
+    --n-item-icon-color: #ffffff !important;
+    --n-item-icon-color-hover: #ffffff !important;
+    --n-item-icon-color-active: #f59e0b !important;
+    --n-item-icon-color-child-active: #f59e0b !important;
+    --n-arrow-color: #ffffff !important;
+    --n-arrow-color-hover: #ffffff !important;
+    --n-arrow-color-active: #f59e0b !important;
+    --n-arrow-color-child-active: #f59e0b !important;
+    --n-group-text-color: #d1d5db !important;
   }
 }
 
@@ -235,7 +252,7 @@ const handleUserAction = (key: string) => {
   align-items: center;
   padding: 20px 24px;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
 
   &.collapsed {
@@ -278,12 +295,8 @@ const handleUserAction = (key: string) => {
   }
 
   :deep(.n-menu-item-content) {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: #ffffff !important;
     font-weight: 500;
-
-    &:hover {
-      color: #fff !important;
-    }
 
     &::before {
       border-radius: 8px;
@@ -291,20 +304,14 @@ const handleUserAction = (key: string) => {
   }
 
   :deep(.n-menu-item-content--selected) {
-    color: #fff !important;
+    color: #f59e0b !important;
     font-weight: 600;
-    background: linear-gradient(90deg, rgba(245, 158, 11, 0.3) 0%, transparent 100%);
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.25) 0%, transparent 100%);
 
     &::before {
       background: transparent;
       border-left: 3px solid #f59e0b;
       border-radius: 0;
-    }
-  }
-
-  :deep(.n-submenu) {
-    .n-menu-item-content {
-      color: rgba(255, 255, 255, 0.85) !important;
     }
   }
 
@@ -314,12 +321,8 @@ const handleUserAction = (key: string) => {
     }
 
     .n-menu-item-content {
-      color: rgba(255, 255, 255, 0.8) !important;
+      color: #e5e7eb !important;
       font-weight: 400;
-
-      &:hover {
-        color: #fff !important;
-      }
     }
 
     .n-menu-item-content--selected {
@@ -329,7 +332,7 @@ const handleUserAction = (key: string) => {
   }
 
   :deep(.n-menu-item-content__icon) {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: #ffffff !important;
   }
 
   :deep(.n-menu-item-content--selected .n-menu-item-content__icon) {
@@ -337,7 +340,12 @@ const handleUserAction = (key: string) => {
   }
 
   :deep(.n-menu-item-content__arrow) {
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: #e5e7eb !important;
+  }
+
+  // 确保所有文字可见
+  :deep(.n-menu-item-content-header) {
+    color: inherit !important;
   }
 }
 
