@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { getToken, removeToken, setToken } from './helper'
 import { store } from '@/store/helper'
-import { fetchSession } from '@/api'
 
 interface SessionResponse {
   auth: boolean
@@ -16,7 +15,7 @@ export interface AuthState {
 export const useAuthStore = defineStore('auth-store', {
   state: (): AuthState => ({
     token: getToken(),
-    session: null,
+    session: { auth: true, model: 'ChatGPTAPI' }, // 售楼系统：默认已登录
   }),
 
   getters: {
@@ -27,14 +26,10 @@ export const useAuthStore = defineStore('auth-store', {
 
   actions: {
     async getSession() {
-      try {
-        const { data } = await fetchSession<SessionResponse>()
-        this.session = { ...data }
-        return Promise.resolve(data)
-      }
-      catch (error) {
-        return Promise.reject(error)
-      }
+      // 售楼系统：返回模拟数据，不请求后端
+      const mockData: SessionResponse = { auth: true, model: 'ChatGPTAPI' }
+      this.session = mockData
+      return Promise.resolve(mockData)
     },
 
     setToken(token: string) {
