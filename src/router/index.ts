@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/building/blocks',
         name: 'building-blocks',
-        component: () => import('@/views/sales/building/projects.vue'),
+        component: () => import('@/views/sales/building/blocks.vue'),
         meta: { title: '楼栋管理' },
       },
       {
