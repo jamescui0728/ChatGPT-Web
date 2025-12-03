@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   NButton,
   NCard,
   NDescriptions,
   NDescriptionsItem,
+  NForm,
+  NFormItem,
+  NInput,
+  NInputNumber,
   NModal,
   NSelect,
   NSpace,
   NTabPane,
   NTabs,
   NTag,
+  useMessage,
 } from 'naive-ui'
 
 const route = useRoute()
+const router = useRouter()
+const message = useMessage()
 
 // 获取项目信息
 const projectId = computed(() => route.query.projectId as string || '1')
@@ -153,6 +160,56 @@ const handleUnitClick = (unit: any) => {
 // 格式化金额
 const formatPrice = (value: number) => {
   return `${(value / 10000).toFixed(0)}万`
+}
+
+// 快速认购弹窗
+const showSubscription = ref(false)
+const subscriptionForm = ref({
+  customerName: '',
+  customerPhone: '',
+  deposit: 50000,
+  remark: '',
+})
+
+// 打开快速认购
+function handleQuickSubscription() {
+  showDetail.value = false
+  showSubscription.value = true
+  subscriptionForm.value = {
+    customerName: '',
+    customerPhone: '',
+    deposit: 50000,
+    remark: '',
+  }
+}
+
+// 提交认购
+function handleSubmitSubscription() {
+  if (!subscriptionForm.value.customerName) {
+    message.warning('请输入客户姓名')
+    return
+  }
+  if (!subscriptionForm.value.customerPhone) {
+    message.warning('请输入客户电话')
+    return
+  }
+
+  // 更新房源状态
+  if (selectedUnit.value) {
+    selectedUnit.value.status = 'subscribed'
+    selectedUnit.value.customer = subscriptionForm.value.customerName
+  }
+
+  message.success('认购成功！')
+  showSubscription.value = false
+
+  // 可选：跳转到认购管理页面
+  // router.push({ name: 'sales-subscription' })
+}
+
+// 跳转到认购管理
+function goToSubscriptionPage() {
+  router.push({ name: 'sales-subscription' })
 }
 
 // 统计数据
@@ -354,7 +411,7 @@ const statistics = computed(() => {
         </NTabs>
         <div class="modal-footer">
           <NSpace justify="end">
-            <NButton v-if="selectedUnit.status === 'available'" type="primary">
+            <NButton v-if="selectedUnit.status === 'available'" type="primary" @click="handleQuickSubscription">
               快速认购
             </NButton>
             <NButton>编辑信息</NButton>
@@ -363,6 +420,70 @@ const statistics = computed(() => {
             </NButton>
           </NSpace>
         </div>
+      </template>
+    </NModal>
+
+    <!-- 快速认购弹窗 -->
+    <NModal
+      v-model:show="showSubscription"
+      preset="card"
+      title="快速认购"
+      style="width: 500px"
+    >
+      <template v-if="selectedUnit">
+        <div class="subscription-unit-info">
+          <div class="info-item">
+            <span class="label">房源：</span>
+            <span class="value">{{ projectName }} - {{ selectedBuilding }}栋 - {{ selectedUnit.name }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">面积：</span>
+            <span class="value">{{ selectedUnit.area }}㎡</span>
+          </div>
+          <div class="info-item">
+            <span class="label">总价：</span>
+            <span class="value price">¥{{ formatPrice(selectedUnit.price) }}</span>
+          </div>
+        </div>
+
+        <NForm :model="subscriptionForm" label-placement="left" label-width="80">
+          <NFormItem label="客户姓名" required>
+            <NInput v-model:value="subscriptionForm.customerName" placeholder="请输入客户姓名" />
+          </NFormItem>
+          <NFormItem label="联系电话" required>
+            <NInput v-model:value="subscriptionForm.customerPhone" placeholder="请输入客户电话" />
+          </NFormItem>
+          <NFormItem label="认购定金">
+            <NInputNumber
+              v-model:value="subscriptionForm.deposit"
+              :min="0"
+              :step="10000"
+              style="width: 100%"
+            >
+              <template #prefix>
+                ¥
+              </template>
+            </NInputNumber>
+          </NFormItem>
+          <NFormItem label="备注">
+            <NInput
+              v-model:value="subscriptionForm.remark"
+              type="textarea"
+              placeholder="请输入备注信息"
+              :rows="2"
+            />
+          </NFormItem>
+        </NForm>
+      </template>
+      <template #footer>
+        <NSpace justify="end">
+          <NButton @click="showSubscription = false">
+            取消
+          </NButton>
+          <NButton type="primary" @click="handleSubmitSubscription">
+            确认认购
+          </NButton>
+        </NSpace>
       </template>
     </NModal>
   </div>
@@ -625,5 +746,38 @@ const statistics = computed(() => {
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #f3f4f6;
+}
+
+.subscription-unit-info {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  margin-bottom: 20px;
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .label {
+      color: #6b7280;
+      width: 60px;
+    }
+
+    .value {
+      color: #1f2937;
+      font-weight: 500;
+
+      &.price {
+        color: #d97706;
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+  }
 }
 </style>
