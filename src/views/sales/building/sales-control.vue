@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import {
   NButton,
   NCard,
@@ -13,13 +14,74 @@ import {
   NTag,
 } from 'naive-ui'
 
+const route = useRoute()
+
+// 获取项目信息
+const projectId = computed(() => route.query.projectId as string || '1')
+const projectName = computed(() => route.query.projectName as string || '阳光城·未来悦')
+
+// 项目配置（不同项目有不同的楼栋）
+const projectConfig: Record<string, { buildings: { label: string; value: string }[]; floors: number; unitsPerFloor: number }> = {
+  1: {
+    buildings: [
+      { label: '1栋', value: '1' },
+      { label: '2栋', value: '2' },
+      { label: '3栋', value: '3' },
+    ],
+    floors: 18,
+    unitsPerFloor: 4,
+  },
+  2: {
+    buildings: [
+      { label: '1栋（望江楼）', value: '1' },
+      { label: '2栋（揽月楼）', value: '2' },
+    ],
+    floors: 32,
+    unitsPerFloor: 6,
+  },
+  3: {
+    buildings: [
+      { label: '1栋', value: '1' },
+      { label: '2栋', value: '2' },
+      { label: '3栋', value: '3' },
+      { label: '4栋', value: '4' },
+    ],
+    floors: 28,
+    unitsPerFloor: 4,
+  },
+  4: {
+    buildings: [
+      { label: 'A栋', value: '1' },
+      { label: 'B栋', value: '2' },
+    ],
+    floors: 25,
+    unitsPerFloor: 4,
+  },
+  5: {
+    buildings: [
+      { label: '1栋', value: '1' },
+      { label: '2栋', value: '2' },
+      { label: '3栋', value: '3' },
+    ],
+    floors: 22,
+    unitsPerFloor: 4,
+  },
+  6: {
+    buildings: [
+      { label: '商业A座', value: '1' },
+      { label: '商业B座', value: '2' },
+    ],
+    floors: 12,
+    unitsPerFloor: 8,
+  },
+}
+
+// 当前项目配置
+const currentConfig = computed(() => projectConfig[projectId.value] || projectConfig['1'])
+
 // 楼栋选择
 const selectedBuilding = ref('1')
-const buildingOptions = [
-  { label: '1栋', value: '1' },
-  { label: '2栋', value: '2' },
-  { label: '3栋', value: '3' },
-]
+const buildingOptions = computed(() => currentConfig.value.buildings)
 
 // 房源状态配置
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -30,12 +92,16 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
   unavailable: { label: '不可售', color: '#9ca3af', bg: '#f3f4f6' },
 }
 
+// 户型配置
+const typeLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+const directions = ['东南', '西南', '东北', '西北', '正南', '正北', '正东', '正西']
+
 // 模拟楼层和房间数据
-const generateFloorData = () => {
-  const floors: any[] = []
-  for (let floor = 18; floor >= 1; floor--) {
+function generateFloorData(floors: number, unitsPerFloor: number) {
+  const floorList: any[] = []
+  for (let floor = floors; floor >= 1; floor--) {
     const units: any[] = []
-    for (let unit = 1; unit <= 4; unit++) {
+    for (let unit = 1; unit <= unitsPerFloor; unit++) {
       const random = Math.random()
       let status = 'available'
       if (random < 0.25)
@@ -47,26 +113,32 @@ const generateFloorData = () => {
       else if (random < 0.55)
         status = 'unavailable'
 
+      const unitName = unit < 10 ? `${floor}0${unit}` : `${floor}${unit}`
       units.push({
-        id: `${floor}0${unit}`,
+        id: unitName,
         floor,
         unit,
-        name: `${floor}0${unit}`,
+        name: unitName,
         area: 89 + Math.floor(Math.random() * 50),
         price: 2500000 + Math.floor(Math.random() * 1000000),
         unitPrice: 28000 + Math.floor(Math.random() * 5000),
-        type: ['A', 'B', 'C', 'D'][unit - 1],
+        type: typeLabels[(unit - 1) % typeLabels.length],
         status,
-        direction: ['东南', '西南', '东北', '西北'][unit - 1],
+        direction: directions[(unit - 1) % directions.length],
         customer: (status !== 'available' && status !== 'unavailable') ? `客户${Math.floor(Math.random() * 100)}` : null,
       })
     }
-    floors.push({ floor, units })
+    floorList.push({ floor, units })
   }
-  return floors
+  return floorList
 }
 
-const floorData = ref(generateFloorData())
+const floorData = ref(generateFloorData(currentConfig.value.floors, currentConfig.value.unitsPerFloor))
+
+// 监听项目或楼栋变化，重新生成数据
+watch([projectId, selectedBuilding], () => {
+  floorData.value = generateFloorData(currentConfig.value.floors, currentConfig.value.unitsPerFloor)
+}, { immediate: false })
 
 // 房源详情弹窗
 const showDetail = ref(false)
@@ -115,13 +187,17 @@ const statistics = computed(() => {
     <div class="page-header">
       <div class="header-content">
         <h1>销控表</h1>
-        <p>阳光城·未来悦 - 实时房源销售状态</p>
+        <p>
+          <span class="project-tag">🏠 {{ projectName }}</span>
+          - 实时房源销售状态
+        </p>
       </div>
       <div class="header-actions">
         <NSelect
           v-model:value="selectedBuilding"
           :options="buildingOptions"
-          style="width: 120px"
+          style="width: 160px"
+          placeholder="选择楼栋"
         />
         <NButton>导出销控表</NButton>
         <NButton type="primary">
@@ -167,17 +243,12 @@ const statistics = computed(() => {
             楼层
           </div>
           <div class="unit-headers">
-            <div class="unit-header">
-              A户型
-            </div>
-            <div class="unit-header">
-              B户型
-            </div>
-            <div class="unit-header">
-              C户型
-            </div>
-            <div class="unit-header">
-              D户型
+            <div
+              v-for="i in currentConfig.unitsPerFloor"
+              :key="i"
+              class="unit-header"
+            >
+              {{ typeLabels[i - 1] }}户型
             </div>
           </div>
         </div>
@@ -320,6 +391,11 @@ const statistics = computed(() => {
       font-size: 14px;
       color: #6b7280;
       margin: 0;
+
+      .project-tag {
+        color: #f59e0b;
+        font-weight: 500;
+      }
     }
   }
 
