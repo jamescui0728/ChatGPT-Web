@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import {
   NButton,
   NCard,
@@ -18,10 +18,11 @@ import {
   NTag,
   useMessage,
 } from 'naive-ui'
+import { useSalesStore } from '@/store/modules/sales'
 
 const route = useRoute()
-const router = useRouter()
 const message = useMessage()
+const salesStore = useSalesStore()
 
 // 获取项目信息
 const projectId = computed(() => route.query.projectId as string || '1')
@@ -194,22 +195,32 @@ function handleSubmitSubscription() {
     return
   }
 
-  // 更新房源状态
+  // 获取当前楼栋名称
+  const currentBuilding = currentConfig.value.buildings.find(b => b.value === selectedBuilding.value)
+  const buildingName = currentBuilding ? currentBuilding.label : `${selectedBuilding.value}栋`
+
+  // 添加到认购管理 store
   if (selectedUnit.value) {
+    salesStore.addSubscription({
+      customer: subscriptionForm.value.customerName,
+      phone: subscriptionForm.value.customerPhone,
+      unitName: selectedUnit.value.name,
+      projectName: projectName.value,
+      building: buildingName,
+      area: selectedUnit.value.area,
+      unitPrice: selectedUnit.value.unitPrice,
+      totalPrice: selectedUnit.value.price,
+      deposit: subscriptionForm.value.deposit,
+      remark: subscriptionForm.value.remark,
+    })
+
+    // 更新房源状态
     selectedUnit.value.status = 'subscribed'
     selectedUnit.value.customer = subscriptionForm.value.customerName
   }
 
-  message.success('认购成功！')
+  message.success('认购成功！可在认购管理中查看')
   showSubscription.value = false
-
-  // 可选：跳转到认购管理页面
-  // router.push({ name: 'sales-subscription' })
-}
-
-// 跳转到认购管理
-function goToSubscriptionPage() {
-  router.push({ name: 'sales-subscription' })
 }
 
 // 统计数据

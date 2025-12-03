@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import {
   NButton,
   NCard,
@@ -22,13 +22,15 @@ import {
   useMessage,
 } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
+import { useSalesStore } from '@/store/modules/sales'
 
 const message = useMessage()
+const salesStore = useSalesStore()
 
 // 搜索条件
 const searchText = ref('')
-const statusFilter = ref(null)
-const salesFilter = ref(null)
+const statusFilter = ref<string | null>(null)
+const salesFilter = ref<string | null>(null)
 
 // 筛选选项
 const statusOptions = [
@@ -45,71 +47,33 @@ const salesOptions = [
   { label: '张明', value: '1' },
   { label: '李华', value: '2' },
   { label: '王芳', value: '3' },
+  { label: '当前用户', value: '4' },
 ]
 
-// 认购数据
-const subscriptionData = ref([
-  {
-    id: 'RG20240320001',
-    customer: '陈建国',
-    phone: '138****8888',
-    unit: '1栋-18-1801',
-    area: 89,
-    unitPrice: 32000,
-    totalPrice: 2848000,
-    deposit: 50000,
-    sales: '张明',
-    subscriptionDate: '2024-03-20',
-    expireDate: '2024-03-27',
-    status: 'pending',
-    remark: '客户要求保留一周',
-  },
-  {
-    id: 'RG20240319001',
-    customer: '李婷婷',
-    phone: '139****6666',
-    unit: '2栋-15-1502',
-    area: 108,
-    unitPrice: 31500,
-    totalPrice: 3402000,
-    deposit: 50000,
-    sales: '李华',
-    subscriptionDate: '2024-03-19',
-    expireDate: '2024-03-26',
-    status: 'approved',
-    remark: '',
-  },
-  {
-    id: 'RG20240318001',
-    customer: '王志强',
-    phone: '137****5555',
-    unit: '1栋-12-1201',
-    area: 125,
-    unitPrice: 31000,
-    totalPrice: 3875000,
-    deposit: 50000,
-    sales: '王芳',
-    subscriptionDate: '2024-03-18',
-    expireDate: '2024-03-25',
-    status: 'converted',
-    remark: '已转正式签约',
-  },
-  {
-    id: 'RG20240317001',
-    customer: '赵美玲',
-    phone: '136****4444',
-    unit: '3栋-8-0803',
-    area: 142,
-    unitPrice: 30500,
-    totalPrice: 4331000,
-    deposit: 50000,
-    sales: '张明',
-    subscriptionDate: '2024-03-17',
-    expireDate: '2024-03-24',
-    status: 'cancelled',
-    remark: '客户资金问题取消',
-  },
-])
+// 从 store 获取认购数据，并进行筛选
+const subscriptionData = computed(() => {
+  let data = salesStore.allSubscriptions
+
+  // 根据搜索条件筛选
+  if (searchText.value) {
+    const keyword = searchText.value.toLowerCase()
+    data = data.filter(item =>
+      item.id.toLowerCase().includes(keyword)
+      || item.customer.toLowerCase().includes(keyword)
+      || item.phone.includes(keyword)
+      || item.unit.toLowerCase().includes(keyword),
+    )
+  }
+
+  // 根据状态筛选
+  if (statusFilter.value)
+    data = data.filter(item => item.status === statusFilter.value)
+
+  return data
+})
+
+// 统计数据
+const stats = computed(() => salesStore.stats)
 
 // 状态配置
 const statusConfig: Record<string, { label: string; type: 'success' | 'warning' | 'info' | 'error' | 'default' }> = {
@@ -137,17 +101,32 @@ function handleViewDetail(row: any) {
 
 // 审核
 function handleApprove(row: any) {
+  salesStore.updateSubscriptionStatus(row.id, 'approved')
   message.success(`认购单 ${row.id} 审核通过`)
 }
 
 // 转签约
 function handleConvert(row: any) {
+  salesStore.updateSubscriptionStatus(row.id, 'converted')
   message.success(`认购单 ${row.id} 已转签约`)
 }
 
 // 取消
 function handleCancel(row: any) {
+  salesStore.updateSubscriptionStatus(row.id, 'cancelled')
   message.info(`认购单 ${row.id} 已取消`)
+}
+
+// 查询
+function handleSearch() {
+  message.success('查询完成')
+}
+
+// 重置筛选条件
+function handleReset() {
+  searchText.value = ''
+  statusFilter.value = null
+  salesFilter.value = null
 }
 
 // 表格列定义
@@ -239,7 +218,7 @@ const pagination = ref({
         </div>
         <div class="stat-content">
           <div class="value">
-            12
+            {{ stats.pending }}
           </div>
           <div class="label">
             待审核
@@ -252,7 +231,7 @@ const pagination = ref({
         </div>
         <div class="stat-content">
           <div class="value">
-            45
+            {{ stats.approved }}
           </div>
           <div class="label">
             已通过
@@ -265,7 +244,7 @@ const pagination = ref({
         </div>
         <div class="stat-content">
           <div class="value">
-            38
+            {{ stats.converted }}
           </div>
           <div class="label">
             已转签约
@@ -278,10 +257,10 @@ const pagination = ref({
         </div>
         <div class="stat-content">
           <div class="value">
-            1.26亿
+            {{ formatPrice(stats.totalAmount) }}
           </div>
           <div class="label">
-            本月认购金额
+            认购总金额
           </div>
         </div>
       </div>
@@ -319,8 +298,10 @@ const pagination = ref({
           clearable
         />
         <NDatePicker type="daterange" clearable />
-        <NButton>查询</NButton>
-        <NButton quaternary>
+        <NButton @click="handleSearch">
+          查询
+        </NButton>
+        <NButton quaternary @click="handleReset">
           重置
         </NButton>
       </div>
