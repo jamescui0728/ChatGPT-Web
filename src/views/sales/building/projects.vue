@@ -1,15 +1,39 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   NButton,
+  NDescriptions,
+  NDescriptionsItem,
   NDropdown,
   NGi,
   NGrid,
   NIcon,
   NInput,
+  NModal,
   NProgress,
   NTag,
 } from 'naive-ui'
+
+const router = useRouter()
+
+// 项目详情弹窗
+const showDetailModal = ref(false)
+const selectedProject = ref<any>(null)
+
+// 查看项目详情
+function handleViewDetail(project: any) {
+  selectedProject.value = project
+  showDetailModal.value = true
+}
+
+// 跳转销控表
+function handleSalesControl(project: any) {
+  router.push({
+    name: 'building-sales-control',
+    query: { projectId: project.id, projectName: project.name },
+  })
+}
 
 // 项目列表数据
 const projects = ref([
@@ -233,10 +257,10 @@ const getSalesRate = (sold: number, total: number) => {
 
             <!-- 操作按钮 -->
             <div class="project-actions">
-              <NButton size="small" secondary>
+              <NButton size="small" secondary @click="handleViewDetail(project)">
                 查看详情
               </NButton>
-              <NButton size="small" type="primary">
+              <NButton size="small" type="primary" @click="handleSalesControl(project)">
                 销控表
               </NButton>
             </div>
@@ -244,6 +268,70 @@ const getSalesRate = (sold: number, total: number) => {
         </div>
       </NGi>
     </NGrid>
+
+    <!-- 项目详情弹窗 -->
+    <NModal
+      v-model:show="showDetailModal"
+      preset="card"
+      title="项目详情"
+      style="width: 700px"
+    >
+      <template v-if="selectedProject">
+        <div class="project-detail-header">
+          <img :src="selectedProject.image" :alt="selectedProject.name" class="detail-image">
+          <div class="detail-info">
+            <h2>{{ selectedProject.name }}</h2>
+            <p class="location">
+              📍 {{ selectedProject.location }}
+            </p>
+            <div class="tags">
+              <NTag :type="statusConfig[selectedProject.status].type" size="small">
+                {{ statusConfig[selectedProject.status].label }}
+              </NTag>
+              <NTag size="small">
+                {{ selectedProject.type }}
+              </NTag>
+            </div>
+          </div>
+        </div>
+
+        <NDescriptions :column="2" label-placement="left" bordered class="detail-desc">
+          <NDescriptionsItem label="开发商">
+            {{ selectedProject.developer }}
+          </NDescriptionsItem>
+          <NDescriptionsItem label="物业类型">
+            {{ selectedProject.type }}
+          </NDescriptionsItem>
+          <NDescriptionsItem label="均价">
+            <span style="color: #d97706; font-weight: 600;">¥{{ selectedProject.price }}元/㎡</span>
+          </NDescriptionsItem>
+          <NDescriptionsItem label="总套数">
+            {{ selectedProject.totalUnits }}套
+          </NDescriptionsItem>
+          <NDescriptionsItem label="已售">
+            {{ selectedProject.soldUnits }}套
+          </NDescriptionsItem>
+          <NDescriptionsItem label="去化率">
+            {{ getSalesRate(selectedProject.soldUnits, selectedProject.totalUnits) }}%
+          </NDescriptionsItem>
+          <NDescriptionsItem label="开盘日期">
+            {{ selectedProject.openDate }}
+          </NDescriptionsItem>
+          <NDescriptionsItem label="交付日期">
+            {{ selectedProject.deliveryDate }}
+          </NDescriptionsItem>
+        </NDescriptions>
+
+        <div class="detail-actions">
+          <NButton @click="showDetailModal = false">
+            关闭
+          </NButton>
+          <NButton type="primary" @click="handleSalesControl(selectedProject); showDetailModal = false">
+            查看销控表
+          </NButton>
+        </div>
+      </template>
+    </NModal>
   </div>
 </template>
 
@@ -431,5 +519,55 @@ const getSalesRate = (sold: number, total: number) => {
       }
     }
   }
+}
+
+// 项目详情弹窗样式
+.project-detail-header {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f3f4f6;
+
+  .detail-image {
+    width: 200px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+
+  .detail-info {
+    flex: 1;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+    }
+
+    .location {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0 0 12px 0;
+    }
+
+    .tags {
+      display: flex;
+      gap: 8px;
+    }
+  }
+}
+
+.detail-desc {
+  margin-bottom: 24px;
+}
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
 }
 </style>
